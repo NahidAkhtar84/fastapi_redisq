@@ -1,0 +1,69 @@
+version: '3.9'
+
+services:
+  fbp-redisq-db:
+    image: postgres:12.3-alpine
+    restart: always
+    volumes:
+      - fbp-redisq-volume:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: "fbp-redisq-db"
+      POSTGRES_PASSWORD: "12345"
+    ports:
+      - 5443:5432
+    network_mode: host
+
+  fbp-redisq:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8889:8889
+    command: python main.py
+    restart: always
+    tty: true
+    volumes:
+      - ./app:/app/:cached
+      - ./.docker/.ipython:/root/.ipython:cached
+    environment:
+      PYTHONPATH: .
+    depends_on:
+      - fbp-redisq-db
+      - redis
+    network_mode: host
+    env_file:
+      - .env
+
+  redis:
+    container_name: rq_redis
+    image: redis:latest
+    volumes:
+      - redisq-data:/data
+    ports:
+      - "6379:6379"
+
+  worker:
+    build: .
+    depends_on:
+      - redis
+    deploy:
+      replicas: 2
+    command: rq worker --url redis://rq_redis:6379 order_queue
+
+  redis-commander:
+    container_name: redis-commander
+    hostname: redis-commander
+    image: ghcr.io/joeferner/redis-commander:latest
+    depends_on:
+      - redis
+      - worker
+    restart: always
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"
+
+volumes:
+  fbp-redisq-volume:
+  redisq-data:
+

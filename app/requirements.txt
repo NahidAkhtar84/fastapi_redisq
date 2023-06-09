@@ -1,0 +1,15 @@
+boto3==1.26.85
+fastapi==0.92.0
+passlib==1.7.4
+psycopg2-binary==2.9.5
+pydantic==1.10.5
+python-dotenv==1.0.0
+SQLAlchemy==1.4.45
+uvicorn==0.20.0
+httpx==0.23.3
+SQLAlchemy-Utils==0.39.0
+pytz==2022.7.1
+starlette-context==0.3.6
+alembic==1.11.1
+rq==1.15.0
+redis==4.5.5
